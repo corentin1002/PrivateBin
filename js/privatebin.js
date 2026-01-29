@@ -4736,11 +4736,14 @@ jQuery.PrivateBin = (function($) {
     const AuthPrompt = (function () {
         const me = {};
 
-        let $authModal,
+        let $authScreen,
+            $nav,
+            $main,
+            authenticated = false,
             pendingCallback = null;
 
         /**
-         * request authentication from the user
+         * request authentication from the user (called by ServerInteraction)
          *
          * @name   AuthPrompt.requestAuth
          * @function
@@ -4749,33 +4752,37 @@ jQuery.PrivateBin = (function($) {
         me.requestAuth = function(callback)
         {
             pendingCallback = callback;
-            $authModal = $('#authmodal');
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                (new bootstrap.Modal($authModal[0])).show();
-            } else {
-                $authModal.modal('show');
-            }
         };
 
         /**
-         * init auth form
+         * init auth screen - shows full-page login if auth is required
          *
          * @name   AuthPrompt.init
          * @function
          */
         me.init = function()
         {
+            $authScreen = $('#authscreen');
+            $nav = $('nav');
+            $main = $('main');
+
+            // show login screen on main page when auth is required (not when viewing a paste)
+            if ($('body').data('authrequired') && !window.location.hash) {
+                $nav.addClass('hidden');
+                $main.addClass('hidden');
+                $authScreen.removeClass('hidden');
+            }
+
             $(document).on('submit', '#authform', function(e) {
                 e.preventDefault();
                 let user = $('#authuser').val(),
                     pass = $('#authpassword').val();
                 ServerInteraction.setAuthCredentials(user, pass);
-                $authModal = $('#authmodal');
-                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                    bootstrap.Modal.getInstance($authModal[0])?.hide();
-                } else {
-                    $authModal.modal('hide');
-                }
+                authenticated = true;
+                $('#authfailure').addClass('hidden');
+                $authScreen.addClass('hidden');
+                $nav.removeClass('hidden');
+                $main.removeClass('hidden');
                 if (pendingCallback !== null) {
                     pendingCallback();
                     pendingCallback = null;
