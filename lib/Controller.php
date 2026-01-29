@@ -553,14 +553,14 @@ class Controller
 
         $username = $this->_conf->getKey('username', 'auth');
         $passwordHash = $this->_conf->getKey('password_hash', 'auth');
-        $data = $this->_request->getData();
+        $authUser = $this->_request->getParam('auth_user');
+        $authPassword = $this->_request->getParam('auth_password');
 
         if (
             empty($username) || empty($passwordHash) ||
-            !array_key_exists('auth_user', $data) ||
-            !array_key_exists('auth_password', $data) ||
-            $data['auth_user'] !== $username ||
-            !password_verify($data['auth_password'], $passwordHash)
+            empty($authUser) || empty($authPassword) ||
+            $authUser !== $username ||
+            !password_verify($authPassword, $passwordHash)
         ) {
             $this->_json_error(I18n::_('Unauthorized'));
             return false;
