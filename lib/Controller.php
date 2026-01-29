@@ -553,16 +553,15 @@ class Controller
 
         $username = $this->_conf->getKey('username', 'auth');
         $passwordHash = $this->_conf->getKey('password_hash', 'auth');
+        $data = $this->_request->getData();
 
         if (
             empty($username) || empty($passwordHash) ||
-            !array_key_exists('PHP_AUTH_USER', $_SERVER) ||
-            !array_key_exists('PHP_AUTH_PW', $_SERVER) ||
-            $_SERVER['PHP_AUTH_USER'] !== $username ||
-            !password_verify($_SERVER['PHP_AUTH_PW'], $passwordHash)
+            !array_key_exists('auth_user', $data) ||
+            !array_key_exists('auth_password', $data) ||
+            $data['auth_user'] !== $username ||
+            !password_verify($data['auth_password'], $passwordHash)
         ) {
-            header('HTTP/1.1 401 Unauthorized');
-            header('WWW-Authenticate: Basic realm="PrivateBin"');
             $this->_json_error(I18n::_('Unauthorized'));
             return false;
         }

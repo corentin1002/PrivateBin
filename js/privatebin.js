@@ -4873,17 +4873,26 @@ jQuery.PrivateBin = (function($) {
          */
         me.run = function()
         {
-            let isPost = Object.keys(data).length > 0,
-                headers = $.extend({}, ajaxHeaders);
+            let isPost = Object.keys(data).length > 0;
 
-            if (authUser !== null && authPassword !== null) {
-                headers['Authorization'] = 'Basic ' + btoa(authUser + ':' + authPassword);
+            // if auth is required and credentials not yet provided, prompt first
+            if (isPost && $('body').data('authrequired') && authUser === null) {
+                AuthPrompt.requestAuth(function() {
+                    me.run();
+                });
+                return;
+            }
+
+            let sendData = $.extend({}, data);
+            if (isPost && authUser !== null && authPassword !== null) {
+                sendData['auth_user'] = authUser;
+                sendData['auth_password'] = authPassword;
             }
 
             let ajaxParams = {
                     type: isPost ? 'POST' : 'GET',
                     url: url,
-                    headers: headers,
+                    headers: ajaxHeaders,
                     dataType: 'json',
                     success: function(result) {
                         if (result.status === 0) {
@@ -4896,15 +4905,9 @@ jQuery.PrivateBin = (function($) {
                     }
                 };
             if (isPost) {
-                ajaxParams.data = JSON.stringify(data);
+                ajaxParams.data = JSON.stringify(sendData);
             }
             $.ajax(ajaxParams).fail(function(jqXHR, textStatus, errorThrown) {
-                if (jqXHR.status === 401) {
-                    AuthPrompt.requestAuth(function() {
-                        me.run();
-                    });
-                    return;
-                }
                 console.error(textStatus, errorThrown);
                 fail(3, jqXHR);
             });
