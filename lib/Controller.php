@@ -89,6 +89,11 @@ class Controller
     private $_json = '';
 
     /**
+     * @var bool whether a JSON response was already sent
+     */
+    private $_jsonSent = false;
+
+    /**
      * Factory of instance models
      *
      * @access private
@@ -162,6 +167,11 @@ class Controller
         }
 
         $this->_setCacheHeaders();
+
+        // skip output if already sent (e.g. auth endpoints)
+        if ($this->_jsonSent) {
+            return;
+        }
 
         // output JSON or HTML
         if ($this->_request->isJsonApiCall()) {
@@ -269,6 +279,16 @@ class Controller
      */
     private function _create()
     {
+        // Handle logout request
+        if (
+            $this->_conf->getKey('enabled', 'auth') &&
+            $this->_request->getParam('auth_logout')
+        ) {
+            $this->_clearAuthToken();
+            $this->_respondJson(array('status' => 0));
+            return;
+        }
+
         // Check authentication if enabled
         if (!$this->_authenticate()) {
             return;
@@ -279,7 +299,7 @@ class Controller
             $this->_conf->getKey('enabled', 'auth') &&
             empty($this->_request->getParam('ct'))
         ) {
-            $this->_json = Json::encode(array('status' => 0));
+            $this->_respondJson(array('status' => 0));
             return;
         }
 
@@ -574,10 +594,10 @@ class Controller
         if (
             empty($username) || empty($passwordHash) ||
             empty($authUser) || empty($authPassword) ||
-            $authUser !== $username ||
+            !hash_equals($username, $authUser) ||
             !password_verify($authPassword, $passwordHash)
         ) {
-            $this->_json_error(I18n::_('Unauthorized'));
+            $this->_respondJson(array('status' => 1, 'message' => I18n::_('Unauthorized')));
             return false;
         }
 
@@ -604,7 +624,7 @@ class Controller
         setcookie('auth_token', $token, array(
             'expires'  => $expires,
             'path'     => '/',
-            'httponly'  => false,
+            'httponly'  => true,
             'secure'   => $isSecure,
             'samesite' => 'Lax',
         ));
@@ -644,6 +664,24 @@ class Controller
     }
 
     /**
+     * Clear the auth token cookie (server-side logout)
+     *
+     * @access private
+     */
+    private function _clearAuthToken()
+    {
+        $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+        setcookie('auth_token', '', array(
+            'expires'  => time() - 3600,
+            'path'     => '/',
+            'httponly'  => true,
+            'secure'   => $isSecure,
+            'samesite' => 'Lax',
+        ));
+    }
+
+    /**
      * prepares JSON encoded error message
      *
      * @access private
@@ -657,6 +695,24 @@ class Controller
             'message' => $error,
         );
         $this->_json = Json::encode($result);
+    }
+
+    /**
+     * Send a JSON response immediately with proper headers.
+     * Used for auth endpoints where isJsonApiCall() may not detect
+     * the request as JSON (e.g. reverse proxy stripping headers).
+     *
+     * @access private
+     * @param  array $data
+     * @throws JsonException
+     */
+    private function _respondJson($data)
+    {
+        $json = Json::encode($data);
+        header('Content-type: ' . Request::MIME_JSON);
+        header('X-Uncompressed-Content-Length: ' . strlen($json));
+        echo $json;
+        $this->_jsonSent = true;
     }
 
     /**
