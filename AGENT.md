@@ -4,6 +4,8 @@ This document provides context for AI agents working on this codebase.
 
 ## Project Overview
 
+This is a **fork of [PrivateBin](https://github.com/PrivateBin/PrivateBin)** that adds **form-based authentication for paste creation**. Only authenticated users can create secrets; reading remains public. The fork supports single-user and multi-user configurations via `[auth:username]` INI sections.
+
 PrivateBin is a zero-knowledge pastebin written in PHP (backend) and vanilla JavaScript (frontend). Data is encrypted/decrypted client-side using 256-bit AES-GCM. The server never sees plaintext content.
 
 ## Architecture
@@ -27,7 +29,7 @@ PrivateBin is a zero-knowledge pastebin written in PHP (backend) and vanilla Jav
   - `PasteViewer` — Paste display
   - `TopNav` — Navigation bar actions
   - `Alert` — User notifications
-  - `AuthPrompt` — Authentication modal for HTTP Basic Auth (when `auth.enabled` is true)
+  - `AuthPrompt` — Full-page login screen for form-based auth (when `auth.enabled` is true)
   - `Controller.init()` — Initializes all modules at `$(document).ready()`
 
 ### Templates
@@ -41,7 +43,7 @@ PrivateBin is a zero-knowledge pastebin written in PHP (backend) and vanilla Jav
 
 - **`cfg/conf.sample.php`** — Documented sample config (INI format behind a PHP guard)
 - **`cfg/conf.php`** — Actual config (not in repo)
-- Sections: `[main]`, `[expire]`, `[expire_options]`, `[formatter_options]`, `[traffic]`, `[purge]`, `[model]`, `[model_options]`, `[auth]`, `[yourls]`, `[shlink]`, `[sri]`
+- Sections: `[main]`, `[expire]`, `[expire_options]`, `[formatter_options]`, `[traffic]`, `[purge]`, `[model]`, `[model_options]`, `[auth]`, `[auth:username]` (multi-user), `[yourls]`, `[shlink]`, `[sri]`
 
 ## Key Patterns
 

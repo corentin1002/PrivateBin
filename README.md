@@ -1,6 +1,11 @@
 # [![PrivateBin](https://cdn.rawgit.com/PrivateBin/assets/master/images/preview/logoSmall.png)](https://privatebin.info/)
 
-*Current version: 2.0.3*
+*Based on PrivateBin 2.0.3*
+
+> **This is a fork of [PrivateBin](https://github.com/PrivateBin/PrivateBin)**
+> that adds **form-based authentication for paste creation**. Only
+> authenticated users can create new pastes; reading remains public.
+> The fork supports single-user and multi-user configurations.
 
 **PrivateBin** is a minimalist, open source online
 [pastebin](https://en.wikipedia.org/wiki/Pastebin)
@@ -9,7 +14,7 @@ where the server has zero knowledge of stored data.
 Data is encrypted and decrypted in the browser using 256bit AES in
 [Galois Counter mode](https://en.wikipedia.org/wiki/Galois/Counter_Mode).
 
-This is a fork of ZeroBin, originally developed by
+Originally a fork of ZeroBin, developed by
 [Sébastien Sauvage](https://github.com/sebsauvage/ZeroBin). PrivateBin was
 refactored to allow easier and cleaner extensions and has many additional
 features.
@@ -90,7 +95,9 @@ file](https://github.com/PrivateBin/PrivateBin/wiki/Configuration):
 
 * QR code for paste URLs, to easily transfer them over to mobile devices
 
-* HTTP Basic Auth protection for paste creation (reading remains public)
+* Form-based authentication for paste creation with multi-user support
+  (reading remains public). Configure users via `[auth:username]` sections in
+  `conf.php`.
 
 ## Further resources
 
